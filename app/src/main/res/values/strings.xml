@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">MorseTorch</string>
+    <string name="start_transmit">Transmit</string>
+    <string name="stop_transmit">Stop</string>
+    <string name="single_transmit">one shot</string>
+    <string name="repeat_transmit">repeat</string>
+</resources>

@@ -9,17 +9,26 @@ import java.util.concurrent.TimeUnit;
 public class TransmissionController {
     private final Executor executor;
 
-    private final int timeunit_msec;
+    private static int timeunit_msec;
 
     private boolean transmissionStopFlagRaised;
     private FlashController flashController;
     private ScreenController screenController;
 
-
-    private void interCharWait()
+    private static void intraDotDashWait()
     {
         try {
             TimeUnit.MILLISECONDS.sleep(timeunit_msec);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private static void interCharWait()
+    {
+        try {
+            TimeUnit.MILLISECONDS.sleep(3 * timeunit_msec);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -44,6 +53,7 @@ public class TransmissionController {
         this.executor.execute(new Runnable() {
             @Override
             public void run() {
+                callback.onJobStart(job);
                 // do-while loop ensures at least one time transmission will be attempted
                 // at loop end will check if owner wants repetition
                 do {
@@ -59,6 +69,9 @@ public class TransmissionController {
                                     } else {
                                         flashController.dot(timeunit_msec);
                                     }
+
+                                    // intra dot/dash wait
+                                    TransmissionController.intraDotDashWait();
                                 }
                                 // after each character check if should continue still
                                 if (callback.shouldStop(job.getController())) {
@@ -68,7 +81,7 @@ public class TransmissionController {
                                     return;
                                 }
                                 // for intra character time gap
-                                interCharWait();
+                                TransmissionController.interCharWait();
 
                                 callback.onCharComplete(job.getOwner(), i);
                             } else {

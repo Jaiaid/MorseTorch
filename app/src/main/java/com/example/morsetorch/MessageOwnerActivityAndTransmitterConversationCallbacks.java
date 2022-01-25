@@ -3,6 +3,7 @@ package com.example.morsetorch;
 import android.app.Activity;
 
 public interface MessageOwnerActivityAndTransmitterConversationCallbacks {
+    void onJobStart(TransmitJob job);
     void onJobComplete(TransmitJob job);
     void onMessageComplete(Activity owner, String message);
     void onCharComplete(Activity owner, int charIdx);

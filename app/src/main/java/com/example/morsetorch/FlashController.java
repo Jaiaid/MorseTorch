@@ -21,8 +21,7 @@ public class FlashController implements DotDashControllerInterface {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
                 if (camManager != null) {
-                    String cameraId = camManager.getCameraIdList()[1];
-                    camManager.setTorchMode(cameraId, true);
+                    camManager.setTorchMode(this.flashFeatureCameraID, true);
                 }
             } catch (Exception e) {
                 System.out.println("FlashController::flashOn (28) : " + e);

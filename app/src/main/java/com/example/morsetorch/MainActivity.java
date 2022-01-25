@@ -29,8 +29,12 @@ public class MainActivity extends AppCompatActivity {
     private boolean isTransmitControlButtonStopped = true;
     private boolean isRepeatMode = false;
 
+    // these are static as we need to keep reference within the whole application lifetime
+    // irrespective of this activity lifetime
+    // also we need to differentiate between application start and activity start
     private static ThreadPoolExecutor executor = new ThreadPoolExecutor(
             numOfBgThread, numOfBgThread, 1, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+    private static TransmitJob job = null;
     private static TransmissionController transmissionController = null;
 
     private void changeColor(int idx, int colorCode) {
@@ -87,17 +91,18 @@ public class MainActivity extends AppCompatActivity {
 
         // job start or stop transmit
         if (!isTransmitControlButtonStopped) {
+            // prepare the job
+            MainActivity.job.setController(MainActivity.transmissionController);
+            MainActivity.job.setMessage(editText.getText().toString());
+            MainActivity.job.setOwner(this);
+
             transmissionController.startTransmit(
-                    new TransmitJob(
-                            editText.getText().toString(),
-                            this,
-                            transmissionController
-                    ),
-                    messageOwnerActivityAndTransmitterConversationCallbacks
+                    MainActivity.job,
+                    MainActivity.messageOwnerActivityAndTransmitterConversationCallbacks
             );
         }
         else {
-            transmissionController.stopTransmit();
+            MainActivity.transmissionController.stopTransmit();
         }
     }
 
@@ -117,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
             new MessageOwnerActivityAndTransmitterConversationCallbacks() {
                 @Override
                 public void onJobComplete(TransmitJob job) {
-                    ((MainActivity)job.owner).jobCompletionActivityExtTrigger();
+                    ((MainActivity)job.getOwner()).jobCompletionActivityExtTrigger();
                 }
 
                 @Override
@@ -165,8 +170,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if (this.transmissionController == null) {
-            this.transmissionController = new TransmissionController(executor, timeunit_msec, this);
+        // init the transmission controller if application is starting for first time
+        if (MainActivity.transmissionController == null) {
+            MainActivity.transmissionController = new TransmissionController(executor, timeunit_msec, this);
+        }
+
+        // init the job if application is starting for first time
+        if (MainActivity.job == null) {
+            MainActivity.job = new TransmitJob();
+        }
+        // update the existing job owner field with newly created activity
+        else {
+            MainActivity.job.setOwner(this);
         }
     }
 

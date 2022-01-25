@@ -48,7 +48,7 @@ public class TransmissionController {
                 // at loop end will check if owner wants repetition
                 do {
                     try {
-                        String processed_message = job.message.toUpperCase(Locale.ROOT);
+                        String processed_message = job.getMessage().toUpperCase(Locale.ROOT);
 
                         for (int i = 0; i < processed_message.length(); i++) {
                             char c = processed_message.charAt(i);
@@ -61,8 +61,8 @@ public class TransmissionController {
                                     }
                                 }
                                 // after each character check if should continue still
-                                if (callback.shouldStop(job.controller)) {
-                                    callback.onMessageComplete(job.owner, job.message);
+                                if (callback.shouldStop(job.getController())) {
+                                    callback.onMessageComplete(job.getOwner(), job.getMessage());
                                     callback.onJobComplete(job);
                                     // just get out bro
                                     return;
@@ -70,17 +70,17 @@ public class TransmissionController {
                                 // for intra character time gap
                                 interCharWait();
 
-                                callback.onCharComplete(job.owner, i);
+                                callback.onCharComplete(job.getOwner(), i);
                             } else {
-                                callback.onInvalidCharacter(job.owner);
+                                callback.onInvalidCharacter(job.getOwner());
                             }
                         }
 
-                        callback.onMessageComplete(job.owner, job.message);
+                        callback.onMessageComplete(job.getOwner(), job.getMessage());
                     } catch (Exception e) {
-                        callback.onFailure(job.owner);
+                        callback.onFailure(job.getOwner());
                     }
-                } while (callback.willRepeat(job.owner));
+                } while (callback.willRepeat(job.getOwner()));
 
                 callback.onJobComplete(job);
             }

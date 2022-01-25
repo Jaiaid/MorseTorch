@@ -7,14 +7,17 @@ public class TransmitJob {
     private String message;
     private Activity owner;
     private TransmissionController controller;
+    private boolean isRunning;
 
     public TransmitJob() {
+        this.isRunning = false;
     }
 
     public TransmitJob(String message, Activity owner, TransmissionController controller) {
         this.message = message;
         this.owner = owner;
         this.controller = controller;
+        this.isRunning = false;
     }
 
     public void setController(TransmissionController controller) {
@@ -31,6 +34,14 @@ public class TransmitJob {
         }
     }
 
+    public void setRunning() {
+        this.isRunning = true;
+    }
+
+    public void setNotRunning() {
+        this.isRunning = false;
+    }
+
     public Activity getOwner() {
         synchronized (this.lock) {
             Activity owner = this.owner;
@@ -39,10 +50,14 @@ public class TransmitJob {
     }
 
     public String getMessage() {
-        return message;
+        return this.message;
     }
 
     public TransmissionController getController() {
-        return controller;
+        return this.controller;
+    }
+
+    public boolean isRunning() {
+        return this.isRunning;
     }
 }

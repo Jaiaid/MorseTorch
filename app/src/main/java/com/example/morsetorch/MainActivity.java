@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Spannable;
@@ -24,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TRANSMIT_CONTROL_STOPPED = "transmit_control_stopped";
     private static final String REPEAT_MODE_ACTIVATED = "repeat_mode_activated";
 
-    private static int timeunit_msec = 500;
+    private static int timeunit_msec = 1000;
     private int highlightIndx = 0;
     private boolean isTransmitControlButtonStopped = true;
     private boolean isRepeatMode = false;
@@ -83,14 +84,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void transmitControlButtonOnClick(View view) {
         transmitControlButtonAlting();
-        // if after alting isTransmitControlButtonStopped is false, it means this press should start transmit
-        EditText editText = (EditText) this.findViewById(R.id.messageTextMultiLine);
-        // if currently transmit control is stopped, current pressing will start it
-        // so edittext should be disabled
-        editText.setEnabled(isTransmitControlButtonStopped);
 
         // job start or stop transmit
         if (!isTransmitControlButtonStopped) {
+            EditText editText = (EditText) this.findViewById(R.id.messageTextMultiLine);
+
             // prepare the job
             MainActivity.job.setController(MainActivity.transmissionController);
             MainActivity.job.setMessage(editText.getText().toString());
@@ -103,17 +101,39 @@ public class MainActivity extends AppCompatActivity {
         }
         else {
             MainActivity.transmissionController.stopTransmit();
+
+            Button transmitControlButton = (Button) this.findViewById(R.id.transmitControlButton);
+            transmitControlButton.setClickable(!MainActivity.job.isRunning());
         }
     }
 
-    public void jobCompletionActivityExtTrigger() {
-        Button transmitButton = (Button) this.findViewById(R.id.transmitControlButton);
+    public void jobStartActivityExtTrigger() {
+        EditText editText = (EditText) this.findViewById(R.id.messageTextMultiLine);
         // as this method is supposed to call by external entity it may be on non UI thread
         // in that case we can not update UI, hence calling from UI thread
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                transmitButton.callOnClick();
+                editText.setEnabled(false);
+            }
+        });
+    }
+
+    public void jobCompletionActivityExtTrigger() {
+        EditText editText = (EditText) this.findViewById(R.id.messageTextMultiLine);
+        Button transmitControlButton = (Button) this.findViewById(R.id.transmitControlButton);
+        Context context = this;
+        // as this method is supposed to call by external entity it may be on non UI thread
+        // in that case we can not update UI, hence calling from UI thread
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // upon job completion, re enable the UI
+                editText.setEnabled(true);
+
+                transmitControlButton.setText(R.string.start_transmit);
+                transmitControlButton.setBackgroundColor(ContextCompat.getColor(context, R.color.transmit_start_button_color));
+                transmitControlButton.setClickable(true);
             }
         });
     }
@@ -121,7 +141,14 @@ public class MainActivity extends AppCompatActivity {
     private static MessageOwnerActivityAndTransmitterConversationCallbacks messageOwnerActivityAndTransmitterConversationCallbacks =
             new MessageOwnerActivityAndTransmitterConversationCallbacks() {
                 @Override
+                public void onJobStart(TransmitJob job) {
+                    job.setRunning();
+                    ((MainActivity) job.getOwner()).jobStartActivityExtTrigger();
+                }
+
+                @Override
                 public void onJobComplete(TransmitJob job) {
+                    job.setNotRunning();
                     ((MainActivity)job.getOwner()).jobCompletionActivityExtTrigger();
                 }
 
@@ -197,15 +224,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
 
-        isTransmitControlButtonStopped = savedInstanceState.getBoolean(TRANSMIT_CONTROL_STOPPED);
-        isRepeatMode = savedInstanceState.getBoolean(REPEAT_MODE_ACTIVATED);
-
-        EditText editText = (EditText) this.findViewById(R.id.messageTextMultiLine);
-        // if transmit control was stopped on save it means edit text was enabled
-        // so edittext enable status should be equal to isTransmitControlButtonStopped
-        editText.setEnabled(isTransmitControlButtonStopped);
+        this.isTransmitControlButtonStopped = savedInstanceState.getBoolean(TRANSMIT_CONTROL_STOPPED);
+        this.isRepeatMode = savedInstanceState.getBoolean(REPEAT_MODE_ACTIVATED);
 
         transmitControlButtonRestore();
         transmitModeRadioButtonGroupRestore();
+
+        EditText editText = (EditText) this.findViewById(R.id.messageTextMultiLine);
+        editText.setEnabled(!MainActivity.job.isRunning());
+
+        Button transmitControlButton = (Button) this.findViewById(R.id.transmitControlButton);
+        transmitControlButton.setClickable(!(MainActivity.job.isRunning() && this.isTransmitControlButtonStopped));
     }
 }

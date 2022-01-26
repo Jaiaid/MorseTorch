@@ -43,6 +43,10 @@ public class TransmissionController {
         screenController = new ScreenController();
     }
 
+    public static void setTimeunit_msec(int timeunit_msec) {
+        TransmissionController.timeunit_msec = timeunit_msec;
+    }
+
     public boolean isTransmissionStopFlagRaised() {
         return transmissionStopFlagRaised;
     }

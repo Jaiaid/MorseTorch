@@ -14,7 +14,10 @@ import android.text.style.BackgroundColorSpan;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.RadioGroup;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -24,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int numOfBgThread = 1;
     private static final String TRANSMIT_CONTROL_STOPPED = "transmit_control_stopped";
     private static final String REPEAT_MODE_ACTIVATED = "repeat_mode_activated";
+    private static final String TIMEUNIT_MSEC = "timeunit_ms";
 
     private static int timeunit_msec = 1000;
     private int highlightIndx = 0;
@@ -88,8 +92,14 @@ public class MainActivity extends AppCompatActivity {
         // job start or stop transmit
         if (!isTransmitControlButtonStopped) {
             EditText editText = (EditText) this.findViewById(R.id.messageTextMultiLine);
+            SeekBar dotTimeUnitSeekBar = (SeekBar) this.findViewById(R.id.dotTimeUnitSeekBar);
+            TextView dotTimeUnitLabel = (TextView) this.findViewById(R.id.seekbarValueTextView);
+
+            // disable time unit set seekbar
+            dotTimeUnitSeekBar.setEnabled(false);
 
             // prepare the job
+            MainActivity.transmissionController.setTimeunit_msec(MainActivity.timeunit_msec);
             MainActivity.job.setController(MainActivity.transmissionController);
             MainActivity.job.setMessage(editText.getText().toString());
             MainActivity.job.setOwner(this);
@@ -101,10 +111,18 @@ public class MainActivity extends AppCompatActivity {
         }
         else {
             MainActivity.transmissionController.stopTransmit();
-
-            Button transmitControlButton = (Button) this.findViewById(R.id.transmitControlButton);
-            transmitControlButton.setClickable(!MainActivity.job.isRunning());
+            if (MainActivity.job.isRunning()) {
+                Button transmitControlButton = (Button) this.findViewById(R.id.transmitControlButton);
+                transmitControlButton.setClickable(false);
+                transmitControlButton.setBackgroundColor(ContextCompat.getColor(this, R.color.transmit_button_disable_color));
+            }
         }
+    }
+
+    public void updateProgressBar(int currentCharIdx) {
+        ProgressBar transmitProgressBar = (ProgressBar) this.findViewById(R.id.transmitProgressBar);
+        // set progress w.r.t to max value of bar
+        transmitProgressBar.setProgress(((currentCharIdx + 1) * 100)/job.getMessage().length());
     }
 
     public void jobStartActivityExtTrigger() {
@@ -122,6 +140,9 @@ public class MainActivity extends AppCompatActivity {
     public void jobCompletionActivityExtTrigger() {
         EditText editText = (EditText) this.findViewById(R.id.messageTextMultiLine);
         Button transmitControlButton = (Button) this.findViewById(R.id.transmitControlButton);
+        SeekBar dotTimeUnitSeekBar = (SeekBar) this.findViewById(R.id.dotTimeUnitSeekBar);
+        ProgressBar transmitProgressBar = (ProgressBar) this.findViewById(R.id.transmitProgressBar);
+
         Context context = this;
         // as this method is supposed to call by external entity it may be on non UI thread
         // in that case we can not update UI, hence calling from UI thread
@@ -134,8 +155,16 @@ public class MainActivity extends AppCompatActivity {
                 transmitControlButton.setText(R.string.start_transmit);
                 transmitControlButton.setBackgroundColor(ContextCompat.getColor(context, R.color.transmit_start_button_color));
                 transmitControlButton.setClickable(true);
+
+                // re enable seek bar
+                dotTimeUnitSeekBar.setEnabled(true);
+                // reset progress bar
+                transmitProgressBar.setProgress(0);
             }
         });
+
+        // set the state variable to true as button will be stopped
+        this.isTransmitControlButtonStopped = true;
     }
 
     private static MessageOwnerActivityAndTransmitterConversationCallbacks messageOwnerActivityAndTransmitterConversationCallbacks =
@@ -160,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onCharComplete(Activity owner, int charIdx) {
                     ((MainActivity)owner).changeColor(charIdx, Color.GREEN);
+                    ((MainActivity)owner).updateProgressBar(charIdx);
                 }
 
                 @Override
@@ -197,6 +227,23 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // seek bar on change callback
+        SeekBar dotTimeUnitSeekBar = (SeekBar) this.findViewById(R.id.dotTimeUnitSeekBar);
+        TextView dotTimeUnitLabel = (TextView) this.findViewById(R.id.seekbarValueTextView);
+        dotTimeUnitSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                dotTimeUnitLabel.setText("per dot time \n= " + Integer.toString(i + 500) + "ms");
+                MainActivity.timeunit_msec = i + 500;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) { }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) { }
+        });
+
         // init the transmission controller if application is starting for first time
         if (MainActivity.transmissionController == null) {
             MainActivity.transmissionController = new TransmissionController(executor, timeunit_msec, this);
@@ -216,6 +263,7 @@ public class MainActivity extends AppCompatActivity {
     public void onSaveInstanceState(Bundle savedInstanceState) {
         savedInstanceState.putBoolean(TRANSMIT_CONTROL_STOPPED, isTransmitControlButtonStopped);
         savedInstanceState.putBoolean(REPEAT_MODE_ACTIVATED, isRepeatMode);
+        savedInstanceState.putInt(TIMEUNIT_MSEC, timeunit_msec);
 
         super.onSaveInstanceState(savedInstanceState);
     }
@@ -226,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
 
         this.isTransmitControlButtonStopped = savedInstanceState.getBoolean(TRANSMIT_CONTROL_STOPPED);
         this.isRepeatMode = savedInstanceState.getBoolean(REPEAT_MODE_ACTIVATED);
+        MainActivity.timeunit_msec = savedInstanceState.getInt(TIMEUNIT_MSEC);
 
         transmitControlButtonRestore();
         transmitModeRadioButtonGroupRestore();
@@ -233,7 +282,17 @@ public class MainActivity extends AppCompatActivity {
         EditText editText = (EditText) this.findViewById(R.id.messageTextMultiLine);
         editText.setEnabled(!MainActivity.job.isRunning());
 
-        Button transmitControlButton = (Button) this.findViewById(R.id.transmitControlButton);
-        transmitControlButton.setClickable(!(MainActivity.job.isRunning() && this.isTransmitControlButtonStopped));
+        if (MainActivity.job.isRunning()) {
+            Button transmitControlButton = (Button) this.findViewById(R.id.transmitControlButton);
+            SeekBar dotTimeUnitSeekBar = (SeekBar) this.findViewById(R.id.dotTimeUnitSeekBar);
+            ProgressBar transmitProgressBar = (ProgressBar) this.findViewById(R.id.transmitProgressBar);
+
+            if (this.isTransmitControlButtonStopped) {
+                transmitControlButton.setClickable(false);
+                transmitControlButton.setBackgroundColor(ContextCompat.getColor(this, R.color.transmit_button_disable_color));
+            }
+            dotTimeUnitSeekBar.setProgress(MainActivity.timeunit_msec - 500);
+            dotTimeUnitSeekBar.setEnabled(false);
+        }
     }
 }

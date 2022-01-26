@@ -9,5 +9,6 @@
     <color name="white">#FFFFFFFF</color>
     <color name="transmit_start_button_color">#99CC00</color>
     <color name="transmit_stop_button_color">#CC0000</color>
+    <color name="transmit_button_disable_color">@android:color/darker_gray</color>
     <color name="transmit_control_button_fontcolor">#0D47A1</color>
 </resources>

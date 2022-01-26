@@ -13,11 +13,11 @@
         android:layout_marginStart="20dp"
         android:layout_marginTop="21dp"
         android:layout_marginEnd="20dp"
-        android:layout_marginBottom="21dp"
+        android:digits="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "
         android:ems="10"
         android:gravity="start|top"
-        android:inputType="textLongMessage|textAutoCorrect|textMultiLine"
-        app:layout_constraintBottom_toTopOf="@+id/transmitModeRadioGroup"
+        android:inputType="textLongMessage|textMultiLine|textCapCharacters"
+        app:layout_constraintBottom_toTopOf="@+id/transmitProgressBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -66,6 +66,53 @@
         android:text="@string/start_transmit"
         android:textColor="@color/transmit_control_button_fontcolor"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/seekbarLabelLinearLayout"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="1dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/transmitModeRadioGroup"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <SeekBar
+            android:id="@+id/dotTimeUnitSeekBar"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:max="3500"
+            android:progress="500" />
+
+        <TextView
+            android:id="@+id/seekbarValueTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:editable="false"
+            android:labelFor="@id/dotTimeUnitSeekBar"
+            android:text="@string/seekbar_label"
+            android:textAlignment="center" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/transmitProgressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="13dp"
+        android:clickable="false"
+        android:indeterminate="false"
+        android:max="100"
+        android:scaleY="8"
+        app:layout_constraintBottom_toTopOf="@+id/seekbarLabelLinearLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 

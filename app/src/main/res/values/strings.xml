@@ -4,5 +4,5 @@
     <string name="stop_transmit">Stop</string>
     <string name="single_transmit">one shot</string>
     <string name="repeat_transmit">repeat</string>
-    <string name="seekbar_label">per dot time \n= 500ms</string>
+    <string name="seekbar_label">per dot time \n= 1000ms</string>
 </resources>

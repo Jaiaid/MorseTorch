@@ -1,4 +1,4 @@
-package com.example.morsetorch;
+package com.bitweaver.morsetorch;
 
 public class ScreenController implements DotDashControllerInterface {
     @Override

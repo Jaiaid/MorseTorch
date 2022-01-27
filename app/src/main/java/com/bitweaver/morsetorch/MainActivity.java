@@ -1,4 +1,4 @@
-package com.example.morsetorch;
+package com.bitweaver.morsetorch;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;

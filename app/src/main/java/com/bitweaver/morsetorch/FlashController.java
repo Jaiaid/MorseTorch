@@ -1,6 +1,4 @@
-package com.example.morsetorch;
-
-import static androidx.core.content.ContextCompat.getSystemService;
+package com.bitweaver.morsetorch;
 
 import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;

@@ -1,4 +1,4 @@
-package com.example.morsetorch;
+package com.bitweaver.morsetorch;
 
 public interface DotDashControllerInterface {
     public void dot(int timeunit_msec);

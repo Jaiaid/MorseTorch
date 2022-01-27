@@ -1,4 +1,4 @@
-package com.example.morsetorch;
+package com.bitweaver.morsetorch;
 
 import java.util.HashMap;
 import java.util.Map;

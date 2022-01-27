@@ -3,16 +3,25 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        release {
+            storeFile file('E:\\ProgramData\\AndroidStudioProjects\\MorseTorch\\playstore_key.jks')
+            storePassword 'morsE12345678Morse'
+            keyAlias 'key'
+            keyPassword 'morsE12345678Morse'
+        }
+    }
     compileSdk 32
 
     defaultConfig {
-        applicationId "com.example.morsetorch"
+        applicationId 'com.bitweaver.morsetorch'
         minSdk 21
         targetSdk 32
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.release
     }
 
     buildTypes {

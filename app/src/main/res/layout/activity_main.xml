@@ -13,6 +13,9 @@
         android:layout_marginStart="20dp"
         android:layout_marginTop="21dp"
         android:layout_marginEnd="20dp"
+        android:autofillHints=""
+        android:background="@android:drawable/editbox_background"
+        android:backgroundTint="#3EFFEB3B"
         android:digits="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "
         android:ems="10"
         android:gravity="start|top"
@@ -56,7 +59,7 @@
     <Button
         android:id="@+id/transmitControlButton"
         android:layout_width="0dp"
-        android:layout_height="109dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="16dp"
@@ -94,7 +97,6 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:editable="false"
             android:labelFor="@id/dotTimeUnitSeekBar"
             android:text="@string/seekbar_label"
             android:textAlignment="center" />
@@ -111,7 +113,7 @@
         android:clickable="false"
         android:indeterminate="false"
         android:max="100"
-        android:scaleY="8"
+        android:scaleY="4"
         app:layout_constraintBottom_toTopOf="@+id/seekbarLabelLinearLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

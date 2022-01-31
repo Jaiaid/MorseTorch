@@ -1,65 +1,54 @@
 package com.bitweaver.morsetorch;
 
-import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
-import android.os.Build;
 import android.content.Context;
 import android.hardware.camera2.CameraManager;
+import android.widget.Toast;
 
 import java.util.concurrent.TimeUnit;
 
 public class FlashController implements DotDashControllerInterface {
-    private CameraManager camManager;
+    private final CameraManager camManager;
     private String flashFeatureCameraID;
     private Context context;
-    private Camera mCamera;
+    private boolean faulty;
 
     private void flashOn() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            try {
-                if (camManager != null) {
-                    camManager.setTorchMode(this.flashFeatureCameraID, true);
-                }
-            } catch (Exception e) {
-                System.out.println("FlashController::flashOn (28) : " + e);
+        try {
+            if (camManager != null) {
+                camManager.setTorchMode(this.flashFeatureCameraID, true);
             }
-        }
-        else {
-            mCamera = Camera.open();
-            Camera.Parameters parameters = mCamera.getParameters();
-            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
+        } catch (Exception e) {
+            //System.out.println("FlashController::flashOn (28) : " + e);
         }
     }
 
     private void flashOff() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            try {
-                if (camManager != null) {
-                    camManager.setTorchMode(flashFeatureCameraID, false);
-                }
-            } catch (CameraAccessException e) {
-                System.out.println("FlashController::flashOff (45) : " + e);
+        try {
+            if (camManager != null) {
+                camManager.setTorchMode(flashFeatureCameraID, false);
             }
-        }
-        else {
-            mCamera = Camera.open();
-            Camera.Parameters parameters = mCamera.getParameters();
-            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+        } catch (CameraAccessException e) {
+        } catch (IllegalArgumentException e) {;
+        } catch (Exception e) {
         }
     }
 
     public FlashController(Context context)
     {
-        this.context = context;
         this.camManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
-
+        this.context = context;
+        this.faulty = false;
         try {
             for (String camId: this.camManager.getCameraIdList()) {
-                if (camManager.getCameraCharacteristics(camId).get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true) {
-                    flashFeatureCameraID = camId;
+                if (camManager.getCameraCharacteristics(camId).get(CameraCharacteristics.FLASH_INFO_AVAILABLE)) {
+                    this.flashFeatureCameraID = camId;
                     break;
                 }
+            }
+            if (this.flashFeatureCameraID == null) {
+                this.faulty = true;
             }
         }
         catch (Exception e) {
@@ -83,11 +72,15 @@ public class FlashController implements DotDashControllerInterface {
     public void dash(int timeunit_msec) {
         flashOn();
         try {
-            TimeUnit.MILLISECONDS.sleep(3 * timeunit_msec);
+            TimeUnit.MILLISECONDS.sleep(3L * timeunit_msec);
         } catch (InterruptedException e) {
             System.out.println("FlashController::dash (91) : " + e);
             e.printStackTrace();
         }
         flashOff();
+    }
+
+    public boolean isFaulty() {
+        return this.faulty;
     }
 }

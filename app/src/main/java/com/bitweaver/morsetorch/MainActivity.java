@@ -18,6 +18,7 @@ import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -30,28 +31,29 @@ public class MainActivity extends AppCompatActivity {
     private static final String TIMEUNIT_MSEC = "timeunit_ms";
 
     private static int timeunit_msec = 1000;
-    private int highlightIndx = 0;
     private boolean isTransmitControlButtonStopped = true;
     private boolean isRepeatMode = false;
 
     // these are static as we need to keep reference within the whole application lifetime
     // irrespective of this activity lifetime
     // also we need to differentiate between application start and activity start
-    private static ThreadPoolExecutor executor = new ThreadPoolExecutor(
-            numOfBgThread, numOfBgThread, 1, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+    private final static ThreadPoolExecutor executor = new ThreadPoolExecutor(
+            numOfBgThread, numOfBgThread, 1, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
     private static TransmitJob job = null;
     private static TransmissionController transmissionController = null;
 
     private void changeColor(int idx, int colorCode) {
-        EditText et = (EditText) this.findViewById(R.id.messageTextMultiLine);
-        Spannable wordtoSpan = new SpannableString(et.getText());
-        wordtoSpan.setSpan(new BackgroundColorSpan(colorCode), 0,
-                    idx+1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        et.setText(wordtoSpan);
+        this.runOnUiThread(() -> {
+            EditText et = this.findViewById(R.id.messageTextMultiLine);
+            Spannable wordtoSpan = new SpannableString(et.getText());
+            wordtoSpan.setSpan(new BackgroundColorSpan(colorCode), 0,
+                    idx + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            et.setText(wordtoSpan);
+        });
     }
 
     private void transmitControlButtonAlting() {
-        Button button = (Button) this.findViewById(R.id.transmitControlButton);
+        Button button = this.findViewById(R.id.transmitControlButton);
 
         if (!isTransmitControlButtonStopped) {
             button.setText(R.string.start_transmit);
@@ -66,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void transmitControlButtonRestore() {
-        Button button = (Button) this.findViewById(R.id.transmitControlButton);
+        Button button = this.findViewById(R.id.transmitControlButton);
 
         if (isTransmitControlButtonStopped) {
             button.setText(R.string.start_transmit);
@@ -78,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void transmitModeRadioButtonGroupRestore() {
-        RadioGroup transmitModeButtonGroup = (RadioGroup) this.findViewById(R.id.transmitModeRadioGroup);
+        RadioGroup transmitModeButtonGroup = this.findViewById(R.id.transmitModeRadioGroup);
         if (!isRepeatMode) {
             transmitModeButtonGroup.check(R.id.radioSingleTransmitButton);
         } else {
@@ -91,19 +93,21 @@ public class MainActivity extends AppCompatActivity {
 
         // job start or stop transmit
         if (!isTransmitControlButtonStopped) {
-            EditText editText = (EditText) this.findViewById(R.id.messageTextMultiLine);
-            SeekBar dotTimeUnitSeekBar = (SeekBar) this.findViewById(R.id.dotTimeUnitSeekBar);
-            TextView dotTimeUnitLabel = (TextView) this.findViewById(R.id.seekbarValueTextView);
-
+            EditText editText = this.findViewById(R.id.messageTextMultiLine);
+            SeekBar dotTimeUnitSeekBar = this.findViewById(R.id.dotTimeUnitSeekBar);
             // disable time unit set seekbar
             dotTimeUnitSeekBar.setEnabled(false);
 
             // prepare the job
-            MainActivity.transmissionController.setTimeunit_msec(MainActivity.timeunit_msec);
+            TransmissionController.setTimeunit_msec(MainActivity.timeunit_msec);
             MainActivity.job.setController(MainActivity.transmissionController);
             MainActivity.job.setMessage(editText.getText().toString());
             MainActivity.job.setOwner(this);
 
+            if (this.transmissionController.isFaulty()) {
+                Toast.makeText(this, this.getResources().getString(R.string.flash_unit_unavailability_message),
+                        Toast.LENGTH_LONG).show();
+            }
             transmissionController.startTransmit(
                     MainActivity.job,
                     MainActivity.messageOwnerActivityAndTransmitterConversationCallbacks
@@ -112,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
         else {
             MainActivity.transmissionController.stopTransmit();
             if (MainActivity.job.isRunning()) {
-                Button transmitControlButton = (Button) this.findViewById(R.id.transmitControlButton);
+                Button transmitControlButton = this.findViewById(R.id.transmitControlButton);
                 transmitControlButton.setClickable(false);
                 transmitControlButton.setBackgroundColor(ContextCompat.getColor(this, R.color.transmit_button_disable_color));
             }
@@ -120,54 +124,54 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void updateProgressBar(int currentCharIdx) {
-        ProgressBar transmitProgressBar = (ProgressBar) this.findViewById(R.id.transmitProgressBar);
+        ProgressBar transmitProgressBar = this.findViewById(R.id.transmitProgressBar);
         // set progress w.r.t to max value of bar
         transmitProgressBar.setProgress(((currentCharIdx + 1) * 100)/job.getMessage().length());
     }
 
     public void jobStartActivityExtTrigger() {
-        EditText editText = (EditText) this.findViewById(R.id.messageTextMultiLine);
+        EditText editText = this.findViewById(R.id.messageTextMultiLine);
         // as this method is supposed to call by external entity it may be on non UI thread
         // in that case we can not update UI, hence calling from UI thread
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                editText.setEnabled(false);
-            }
-        });
+        this.runOnUiThread(() -> editText.setEnabled(false));
     }
 
     public void jobCompletionActivityExtTrigger() {
-        EditText editText = (EditText) this.findViewById(R.id.messageTextMultiLine);
-        Button transmitControlButton = (Button) this.findViewById(R.id.transmitControlButton);
-        SeekBar dotTimeUnitSeekBar = (SeekBar) this.findViewById(R.id.dotTimeUnitSeekBar);
-        ProgressBar transmitProgressBar = (ProgressBar) this.findViewById(R.id.transmitProgressBar);
+        EditText editText = this.findViewById(R.id.messageTextMultiLine);
+        Button transmitControlButton = this.findViewById(R.id.transmitControlButton);
+        SeekBar dotTimeUnitSeekBar = this.findViewById(R.id.dotTimeUnitSeekBar);
+        ProgressBar transmitProgressBar = this.findViewById(R.id.transmitProgressBar);
 
         Context context = this;
         // as this method is supposed to call by external entity it may be on non UI thread
         // in that case we can not update UI, hence calling from UI thread
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                // upon job completion, re enable the UI
-                editText.setEnabled(true);
+        this.runOnUiThread(() -> {
+            // upon job completion, re enable the UI
+            editText.setEnabled(true);
 
-                transmitControlButton.setText(R.string.start_transmit);
-                transmitControlButton.setBackgroundColor(ContextCompat.getColor(context, R.color.transmit_start_button_color));
-                transmitControlButton.setClickable(true);
+            transmitControlButton.setText(R.string.start_transmit);
+            transmitControlButton.setBackgroundColor(ContextCompat.getColor(context, R.color.transmit_start_button_color));
+            transmitControlButton.setClickable(true);
 
-                // re enable seek bar
-                dotTimeUnitSeekBar.setEnabled(true);
-                // reset progress bar
-                transmitProgressBar.setProgress(0);
-            }
+            // re enable seek bar
+            dotTimeUnitSeekBar.setEnabled(true);
+            // reset progress bar
+            transmitProgressBar.setProgress(0);
         });
 
         // set the state variable to true as button will be stopped
         this.isTransmitControlButtonStopped = true;
     }
 
-    private static MessageOwnerActivityAndTransmitterConversationCallbacks messageOwnerActivityAndTransmitterConversationCallbacks =
+    private void jobFailureActivityExtTrigger() {
+        this.runOnUiThread(() -> {;
+            Toast.makeText(this, this.getResources().getString(R.string.job_failure_message),
+                    Toast.LENGTH_LONG).show();
+        });
+        MainActivity.transmissionController.stopTransmit();
+    }
+
+    private final static MessageOwnerActivityAndTransmitterConversationCallbacks messageOwnerActivityAndTransmitterConversationCallbacks =
             new MessageOwnerActivityAndTransmitterConversationCallbacks() {
                 @Override
                 public void onJobStart(TransmitJob job) {
@@ -199,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(Activity owner) {
-
+                    ((MainActivity) job.getOwner()).jobFailureActivityExtTrigger();
                 }
 
                 @Override
@@ -219,21 +223,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        RadioGroup transmitModeButtonGroup = (RadioGroup) this.findViewById(R.id.transmitModeRadioGroup);
-        transmitModeButtonGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup radioGroup, int i) {
-                isRepeatMode = (i == R.id.radioRepeatTransmitButton);
-            }
-        });
+        RadioGroup transmitModeButtonGroup = this.findViewById(R.id.transmitModeRadioGroup);
+        transmitModeButtonGroup.setOnCheckedChangeListener((radioGroup, i) ->
+                isRepeatMode = (i == R.id.radioRepeatTransmitButton));
 
         // seek bar on change callback
-        SeekBar dotTimeUnitSeekBar = (SeekBar) this.findViewById(R.id.dotTimeUnitSeekBar);
-        TextView dotTimeUnitLabel = (TextView) this.findViewById(R.id.seekbarValueTextView);
+        SeekBar dotTimeUnitSeekBar = this.findViewById(R.id.dotTimeUnitSeekBar);
+        TextView dotTimeUnitLabel = this.findViewById(R.id.seekbarValueTextView);
         dotTimeUnitSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                dotTimeUnitLabel.setText("per dot time \n= " + Integer.toString(i + 500) + "ms");
+                dotTimeUnitLabel.setText(
+                        String.format(getResources().getString(R.string.seekbar_format_label), i + 500));
                 MainActivity.timeunit_msec = i + 500;
             }
 
@@ -279,13 +280,12 @@ public class MainActivity extends AppCompatActivity {
         transmitControlButtonRestore();
         transmitModeRadioButtonGroupRestore();
 
-        EditText editText = (EditText) this.findViewById(R.id.messageTextMultiLine);
+        EditText editText = this.findViewById(R.id.messageTextMultiLine);
         editText.setEnabled(!MainActivity.job.isRunning());
 
         if (MainActivity.job.isRunning()) {
-            Button transmitControlButton = (Button) this.findViewById(R.id.transmitControlButton);
-            SeekBar dotTimeUnitSeekBar = (SeekBar) this.findViewById(R.id.dotTimeUnitSeekBar);
-            ProgressBar transmitProgressBar = (ProgressBar) this.findViewById(R.id.transmitProgressBar);
+            Button transmitControlButton = this.findViewById(R.id.transmitControlButton);
+            SeekBar dotTimeUnitSeekBar = this.findViewById(R.id.dotTimeUnitSeekBar);
 
             if (this.isTransmitControlButtonStopped) {
                 transmitControlButton.setClickable(false);

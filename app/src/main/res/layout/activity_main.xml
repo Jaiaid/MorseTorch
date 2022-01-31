@@ -98,7 +98,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:labelFor="@id/dotTimeUnitSeekBar"
-            android:text="@string/seekbar_label"
+            android:text="@string/seekbar_initial_label"
             android:textAlignment="center" />
     </LinearLayout>
 

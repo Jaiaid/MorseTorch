@@ -6,6 +6,7 @@ The app is published and can be found in https://play.google.com/store/apps/deta
 Write a text in the text area and press start to transmit the word as morse code using the flashlight
 
 Morse code contains dot and dash. I have represnted dot with light flashing and dash is same with light flashing but three times longer
+Only english letter support. Dot dash code taken from https://en.wikipedia.org/wiki/Morse_code
 
 Features:
 * Indication of upto what portion of message has been transmitted

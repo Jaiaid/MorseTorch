@@ -14,7 +14,7 @@ Only english letters are supported. Dot dash code taken from https://en.wikipedi
 * Transmission type select
   * One shot: message will be transmitted once
   * Repeat: message will be transmitted in loop
-* control length of flashing for dot, dash will be 3x of that. Dot length can be from 100ms to 4s
+* control length of flashing for dot, dash will be 3x of that. Dot length can be from 500ms to 4s
 * UI colorization is flexible for dark and light theme, button color changes according to transmission off or ongoing
 
 ## Privacy Policy

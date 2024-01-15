@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TRANSMIT_CONTROL_STOPPED = "transmit_control_stopped";
     private static final String REPEAT_MODE_ACTIVATED = "repeat_mode_activated";
     private static final String TIMEUNIT_MSEC = "timeunit_ms";
+    private static final int DOTTIME_MSEC_MIN = 100;
 
     private static int timeunit_msec = 1000;
     private boolean isTransmitControlButtonStopped = true;
@@ -234,8 +235,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 dotTimeUnitLabel.setText(
-                        String.format(getResources().getString(R.string.seekbar_format_label), i + 500));
-                MainActivity.timeunit_msec = i + 500;
+                        String.format(getResources().getString(R.string.seekbar_format_label), i + DOTTIME_MSEC_MIN));
+                MainActivity.timeunit_msec = i + DOTTIME_MSEC_MIN;
             }
 
             @Override
@@ -291,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
                 transmitControlButton.setClickable(false);
                 transmitControlButton.setBackgroundColor(ContextCompat.getColor(this, R.color.transmit_button_disable_color));
             }
-            dotTimeUnitSeekBar.setProgress(MainActivity.timeunit_msec - 500);
+            dotTimeUnitSeekBar.setProgress(MainActivity.timeunit_msec - DOTTIME_MSEC_MIN);
             dotTimeUnitSeekBar.setEnabled(false);
         }
     }
